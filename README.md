@@ -1,6 +1,8 @@
-# SSD_resnet_pytorch
+# SSD: Single Shot MultiBox Object Detector, in PyTorch
 ## Introduction
 This is the SSD model based on the unfinished project by [Max DeGroot](https://github.com/amdegroot/ssd.pytorch/). I have corrected some bugs in the code and successfully run the code on GPU (Tesla P4) at Google Cloud.  
+
+[SSD (Single Shot MultiBox Object Detector)](https://arxiv.org/pdf/1512.02325.pdf) is able to detect objects in an image with bounding box. The method is faster than [faster-RCNN](http://papers.nips.cc/paper/5638-faster-r-cnn-towards-real-time-object-detection-with-region-proposal-networks.pdf) and [mask-RCNN](https://arxiv.org/pdf/1703.06870.pdf%20http://arxiv.org/abs/1703.06870.pdf) and still yield a good accuracy.
 
 ## Installation
 - Install [PyTorch](http://pytorch.org/) by selecting your environment on the website and running the appropriate command.
@@ -85,4 +87,4 @@ I have accumulated the following to-do list, which I hope to complete in the nea
   * [ ] Support for resNet and mobileNet as feature extractor
   * [ ] Support for SSD512 training and testing
   * [ ] Testing results for VOC dataset with loss, accuracy and training time.
-  
+  * [ ] Implement [visual reasoning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Chen_Iterative_Visual_Reasoning_CVPR_2018_paper.pdf) for improving accuracy 
