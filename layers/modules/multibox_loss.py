@@ -111,7 +111,7 @@ class MultiBoxLoss(nn.Module):
 
         # Sum of losses: L(x,c,l,g) = (Lconf(x, c) + αLloc(x,l,g)) / N
 
-        N = num_pos.data.sum()
+        N = num_pos.data.sum().float()
         loss_l /= N
         loss_c /= N
         return loss_l, loss_c
