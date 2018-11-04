@@ -118,7 +118,7 @@ class SSD(nn.Module):
                 x = F.relu(v(x), inplace=True)
             elif self.model =='resnet':
                 x = v(x)
-            if k in sources[self.model]['e']:
+            if k in extract[self.model]['e']:
                 sources.append(x)
 
         # apply multibox head to source layers
