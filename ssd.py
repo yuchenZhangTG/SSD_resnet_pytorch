@@ -247,7 +247,7 @@ def multibox(base, extras, extract,cfg, num_classes):
     k=0
     for v in extract['b']:
         loc_layers += [nn.Conv2d(base[v].out_channels,
-                        cfg[k], kernel_size=3, padding=1)]
+                        cfg[k]* 4, kernel_size=3, padding=1)]
         conf_layers += [nn.Conv2d(base[v].out_channels,
                         cfg[k]*num_classes, kernel_size=3, padding=1)]
         k+=1
