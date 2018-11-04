@@ -15,7 +15,7 @@ extras = {
 }
 
 #where to extract features
-sources = {
+extract = {
     'vgg': {'b':[21,33],'e':[1,3,5,7]}, #vgg -14
     'resnet': {'b':[16,19],'e':[0,1,2,3]}
 }
@@ -92,7 +92,7 @@ class SSD(nn.Module):
         flag=0
         for k, v in enumerate(self.base):
             x = v(x)
-            if (k-1,k)[self.model=='resnet']  in sources[self.model]['b']:
+            if (k-1,k)[self.model=='resnet']  in extract[self.model]['b']:
                 if flag==0:
                     sources.append(self.L2Norm(x))
                 else:
@@ -240,17 +240,17 @@ def resnet_extras(cfg):
     return layers
 
 
-def multibox(base, extras, sources,cfg, num_classes):
+def multibox(base, extras, extract,cfg, num_classes):
     loc_layers = []
     conf_layers = []
     k=0
-    for v in sources['b']:
+    for v in extract['b']:
         loc_layers += [nn.Conv2d(base[v].out_channels,
                         cfg[k], kernel_size=3, padding=1)]
         conf_layers += [nn.Conv2d(base[v].out_channels,
                         cfg[k]*num_classes, kernel_size=3, padding=1)]
         k+=1
-    for v in sources['e']:
+    for v in extract['e']:
         loc_layers += [nn.Conv2d(extras[v].out_channels,
                         cfg[k]* 4, kernel_size=3, padding=1)]
         conf_layers += [nn.Conv2d(extras[v].out_channels,
@@ -279,5 +279,5 @@ def build_ssd(phase, model, size=300, num_classes=21):
     if model in ['vgg','resnet']:
         base_=globals()[model](base[model])
         extras_=globals()[model+'_extras'](extras[model])
-        head_ = multibox(base_,extras_,sources[model], mbox[model], num_classes)    
+        head_ = multibox(base_,extras_,extract[model], mbox[model], num_classes)    
     return SSD(phase,model, size, base_, extras_, head_, num_classes)
