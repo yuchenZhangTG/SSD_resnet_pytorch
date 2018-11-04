@@ -95,6 +95,7 @@ class SSD(nn.Module):
             if (k-1,k)[self.model=='resnet']  in extract[self.model]['b']:
                 if flag==0:
                     sources.append(self.L2Norm(x))
+                    flag+=1
                 else:
                     sources.append(x)
             
