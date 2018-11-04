@@ -168,10 +168,10 @@ def train():
 
         if args.cuda:
             images = Variable(images.cuda())
-            targets = [Variable(ann.cuda(), volatile=True) for ann in targets]
+            targets = [Variable(ann.cuda(), requires_grad=True) for ann in targets]
         else:
             images = Variable(images)
-            targets = [Variable(ann, volatile=True) for ann in targets]
+            targets = [Variable(ann, requires_grad=True) for ann in targets]
         # forward
         t0 = time.time()
         out = net(images)

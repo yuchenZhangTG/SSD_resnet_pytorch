@@ -4,8 +4,27 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from layers import *
 from data import voc, coco
+import torchvision
 import os
 
+
+#extra layers
+extras = {
+    'vgg': [1024,256, 'S', 512, 128, 'S', 256, 128, 256, 128, 256],
+    'resnet': [512,256,128,128,128],
+}
+
+#where to extract features
+sources = {
+    'vgg': {'b':[21,33],'e':[1,3,5,7]}, #vgg -14
+    'resnet': {'b':[16,19],'e':[0,1,2,3]}
+}
+
+
+mbox = {
+    'vgg': [4, 6, 6, 6, 4, 4],  # number of boxes per feature map location
+    'resnet': [4, 6, 6, 6, 4, 4],
+}
 
 class SSD(nn.Module):
     """Single Shot Multibox Architecture
@@ -25,17 +44,17 @@ class SSD(nn.Module):
         head: "multibox head" consists of loc and conf conv layers
     """
 
-    def __init__(self, phase, size, base, extras, head, num_classes):
+    def __init__(self, phase,model, size, base, extras, head, num_classes):
         super(SSD, self).__init__()
         self.phase = phase
         self.num_classes = num_classes
         self.cfg = (coco, voc)[num_classes == 21]
         self.priorbox = PriorBox(self.cfg)
-        self.priors = Variable(self.priorbox.forward(), volatile=True)
+        self.priors = Variable(self.priorbox.forward(), requires_grad=True)
         self.size = size
-
+        self.model=model
         # SSD network
-        self.vgg = nn.ModuleList(base)
+        self.base = nn.ModuleList(base)
         # Layer learns to scale the l2 normalized features from conv4_3
         self.L2Norm = L2Norm(512, 20)
         self.extras = nn.ModuleList(extras)
@@ -69,23 +88,36 @@ class SSD(nn.Module):
         sources = list()
         loc = list()
         conf = list()
-
-        # apply vgg up to conv4_3 relu
-        for k in range(23):
-            x = self.vgg[k](x)
-
-        s = self.L2Norm(x)
-        sources.append(s)
-
-        # apply vgg up to fc7
-        for k in range(23, len(self.vgg)):
-            x = self.vgg[k](x)
-        sources.append(x)
-
+        
+        flag=0
+        for k, v in enumerate(self.base):
+            x = v(x)
+            if (k-1,k)[self.model=='resnet']  in sources[self.model]['b']:
+                if flag==0:
+                    sources.append(self.L2Norm(x))
+                else:
+                    sources.append(x)
+            
+        '''
+        for k,i in enumerate(sources[self.model]['b']):
+            layer=1
+            #apply base network up to source points
+            for j in range(layer, (i+2,i+1)[self.model=='resnet'] ):
+                x = self.base[j](x)
+                layer+=1
+            if k==0:
+                sources.append(self.L2Norm(x))
+            else:
+                sources.append(x)
+        '''    
+            
         # apply extra layers and cache source layer outputs
         for k, v in enumerate(self.extras):
-            x = F.relu(v(x), inplace=True)
-            if k % 2 == 1:
+            if self.model=='vgg':
+                x = F.relu(v(x), inplace=True)
+            elif self.model =='resnet':
+                x = v(x)
+            if k in sources[self.model]['e']:
                 sources.append(x)
 
         # apply multibox head to source layers
@@ -121,9 +153,9 @@ class SSD(nn.Module):
             print('Sorry only .pth and .pkl files supported.')
 
 
-# This function is derived from torchvision VGG make_layers()
-# https://github.com/pytorch/vision/blob/master/torchvision/models/vgg.py
-def vgg(cfg, i, batch_norm=False):
+'''The functions are derived from torchvision VGG and resNet
+ https://github.com/pytorch/vision/blob/master/torchvision/models/'''
+def vgg(cfg, i=3, batch_norm=False):
     layers = []
     in_channels = i
     for v in cfg:
@@ -145,14 +177,49 @@ def vgg(cfg, i, batch_norm=False):
                nn.ReLU(inplace=True), conv7, nn.ReLU(inplace=True)]
     return layers
 
+def make_layers(block, inplanes, planes, blocks, stride=1):
+    downsample = None
+    if stride != 1 or inplanes != planes * block.expansion:
+        downsample = nn.Sequential(
+            nn.Conv2d(inplanes, planes * block.expansion,
+                      kernel_size=1, stride=stride, bias=False),
+            nn.BatchNorm2d(planes * block.expansion),
+        )
+    layers = []
+    bbl=block(inplanes, planes, stride, downsample)
+    bbl.out_channels=planes*block.expansion
+    layers.append(bbl)
+    
+    inplanes = planes * block.expansion
+    for i in range(1, blocks):
+        bbl=block(inplanes, planes)
+        bbl.out_channels=planes*block.expansion
+        layers.append(bbl)
+    return layers
 
-def add_extras(cfg, i, batch_norm=False):
+def resnet(cfg,in_channel=3):
+    layers = []
+    layers += [nn.Conv2d(in_channel, 64, kernel_size=7, stride=2, padding=3,bias=False),
+               nn.BatchNorm2d(64),
+               nn.ReLU(inplace=True),
+               nn.MaxPool2d(kernel_size=3, stride=2, padding=1)]
+    block= torchvision.models.resnet.Bottleneck
+    layers += make_layers(block,64,64, cfg[0])
+    layers += make_layers(block,64*block.expansion,128,cfg[1], stride=2)
+    layers += make_layers(block,128*block.expansion,256,cfg[2], stride=2)
+    layers += make_layers(block,256*block.expansion,512,cfg[3], stride=2)
+    layers += [nn.AvgPool2d(7, stride=1)]
+    return layers
+
+
+
+def vgg_extras(cfg, batch_norm=False):
     # Extra layers added to VGG for feature scaling
     layers = []
-    in_channels = i
     flag = False
+    in_channels=0
     for k, v in enumerate(cfg):
-        if in_channels != 'S':
+        if in_channels != 'S' and k>0:
             if v == 'S':
                 layers += [nn.Conv2d(in_channels, cfg[k + 1],
                            kernel_size=(1, 3)[flag], stride=2, padding=1)]
@@ -162,36 +229,40 @@ def add_extras(cfg, i, batch_norm=False):
         in_channels = v
     return layers
 
+def resnet_extras(cfg):        
+    layers = []
+    block= torchvision.models.resnet.Bottleneck
+    in_channels=0
+    for k, v in enumerate(cfg):
+        if k>0:
+            layers += make_layers(block,in_channels,v,1,stride=(1,2)[k<3])    
+        in_channels = v*block.expansion
+    return layers
 
-def multibox(vgg, extra_layers, cfg, num_classes):
+
+def multibox(base, extras, sources,cfg, num_classes):
     loc_layers = []
     conf_layers = []
-    vgg_source = [21, -2]
-    for k, v in enumerate(vgg_source):
-        loc_layers += [nn.Conv2d(vgg[v].out_channels,
-                                 cfg[k] * 4, kernel_size=3, padding=1)]
-        conf_layers += [nn.Conv2d(vgg[v].out_channels,
-                        cfg[k] * num_classes, kernel_size=3, padding=1)]
-    for k, v in enumerate(extra_layers[1::2], 2):
-        loc_layers += [nn.Conv2d(v.out_channels, cfg[k]
-                                 * 4, kernel_size=3, padding=1)]
-        conf_layers += [nn.Conv2d(v.out_channels, cfg[k]
-                                  * num_classes, kernel_size=3, padding=1)]
-    return vgg, extra_layers, (loc_layers, conf_layers)
+    k=0
+    for v in sources['b']:
+        loc_layers += [nn.Conv2d(base[v].out_channels,
+                        cfg[k], kernel_size=3, padding=1)]
+        conf_layers += [nn.Conv2d(base[v].out_channels,
+                        cfg[k]*num_classes, kernel_size=3, padding=1)]
+        k+=1
+    for v in sources['e']:
+        loc_layers += [nn.Conv2d(extras[v].out_channels,
+                        cfg[k]* 4, kernel_size=3, padding=1)]
+        conf_layers += [nn.Conv2d(extras[v].out_channels,
+                        cfg[k]*num_classes, kernel_size=3, padding=1)]
+        k+=1
+    return loc_layers, conf_layers
 
 
 base = {
-    '300': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'C', 512, 512, 512, 'M',
+    'vgg': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'C', 512, 512, 512, 'M',
             512, 512, 512],
-    '512': [],
-}
-extras = {
-    '300': [256, 'S', 512, 128, 'S', 256, 128, 256, 128, 256],
-    '512': [],
-}
-mbox = {
-    '300': [4, 6, 6, 6, 4, 4],  # number of boxes per feature map location
-    '512': [],
+    'resnet': [3, 4, 6, 3],
 }
 
 
@@ -203,7 +274,10 @@ def build_ssd(phase, model, size=300, num_classes=21):
         print("ERROR: You specified size " + repr(size) + ". However, " +
               "currently only SSD300 (size=300) is supported!")
         return
-    base_, extras_, head_ = multibox(globals()[model](base[str(size)], 3),
-                                     add_extras(extras[str(size)], 1024),
-                                     mbox[str(size)], num_classes)
-    return SSD(phase, size, base_, extras_, head_, num_classes)
+    
+    
+    if model in ['vgg','resnet']:
+        base_=globals()[model](base[model])
+        extras_=globals()[model+'_extras'](extras[model])
+        head_ = multibox(base_,extras_,sources[model], mbox[model], num_classes)    
+    return SSD(phase,model, size, base_, extras_, head_, num_classes)
