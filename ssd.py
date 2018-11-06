@@ -35,7 +35,6 @@ class SSD(nn.Module):
         3) associated priorbox layer to produce default bounding
            boxes specific to the layer's feature map size.
     See: https://arxiv.org/pdf/1512.02325.pdf for more details.
-
     Args:
         phase: (string) Can be "test" or "train"
         size: input image size
@@ -56,7 +55,7 @@ class SSD(nn.Module):
         # SSD network
         self.base = nn.ModuleList(base)
         # Layer learns to scale the l2 normalized features from conv4_3
-        self.L2Norm = L2Norm(512, 20)
+        self.L2Norm = L2Norm( (512,1024)[model=='resnet' , 20)
         self.extras = nn.ModuleList(extras)
 
         self.loc = nn.ModuleList(head[0])
@@ -68,17 +67,14 @@ class SSD(nn.Module):
 
     def forward(self, x):
         """Applies network layers and ops on input image(s) x.
-
         Args:
             x: input image or batch of images. Shape: [batch,3,300,300].
-
         Return:
             Depending on phase:
             test:
                 Variable(tensor) of output class label predictions,
                 confidence score, and corresponding location predictions for
                 each object detected. Shape: [batch,topk,7]
-
             train:
                 list of concat outputs from:
                     1: confidence layers, Shape: [batch*num_priors,num_classes]
