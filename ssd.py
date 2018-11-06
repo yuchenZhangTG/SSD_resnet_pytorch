@@ -55,7 +55,7 @@ class SSD(nn.Module):
         # SSD network
         self.base = nn.ModuleList(base)
         # Layer learns to scale the l2 normalized features from conv4_3
-        self.L2Norm = L2Norm( (512,1024)[model=='resnet' , 20)
+        self.L2Norm = L2Norm( (512,1024)[model=='resnet'], 20)
         self.extras = nn.ModuleList(extras)
 
         self.loc = nn.ModuleList(head[0])
