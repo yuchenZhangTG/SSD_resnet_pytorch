@@ -213,13 +213,17 @@ def adjust_learning_rate(optimizer, gamma, step):
 
 
 def xavier(param):
-    init.xavier_uniform(param)
+    init.xavier_uniform_(param)
 
 
 def weights_init(m):
     if isinstance(m, nn.Conv2d):
-        xavier(m.weight.data)
-        m.bias.data.zero_()
+        nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+        #xavier(m.weight.data)
+        #m.bias.data.zero_()
+    elif isinstance(m, nn.BatchNorm2d):
+        nn.init.constant_(m.weight, 1)
+        nn.init.constant_(m.bias, 0)
 
 
 def create_vis_plot(_xlabel, _ylabel, _title, _legend):
