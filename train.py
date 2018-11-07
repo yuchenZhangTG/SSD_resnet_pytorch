@@ -148,6 +148,7 @@ def train():
                                   num_workers=args.num_workers,
                                   shuffle=True, collate_fn=detection_collate,
                                   pin_memory=True)
+    t00 = time.time()
     # create batch iterator
     batch_iterator = iter(data_loader)
     for iteration in range(args.start_iter, cfg['max_iter']):
@@ -186,7 +187,7 @@ def train():
         conf_loss += loss_c.data.item()
 
         if iteration % 10 == 0:
-            print('timer: %.4f sec.' % (t1 - t0))
+            print('Time for 1 iteration: %.4f s.' % (t1 - t0), ' Timer %1.1f s.' % (t1 - t00))
             print('iter ' + repr(iteration) + ' || Loss: %.4f ||' % (loss.data.item()), end=' ')
 
         if args.visdom:
