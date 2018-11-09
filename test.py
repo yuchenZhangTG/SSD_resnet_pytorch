@@ -91,12 +91,13 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
                 name = labelmap[ii[k]-1]
                 conf = detectionr[k].item()*100
                 precision=correct/(k+1);recall=correct/possible
-                precisions.append(precision)
-                f.write('rank %d: %s(%d), score %1.2f%%, precision:%1.2f, recall:%1.2f'%
-                      (k,name,ii[k]-1,conf,precision,recall))
+                precisions.append(precision)                    
                 gtb=gt_box[j,:];dtb=dt_box[k,:]; iou1=iou[k,j].item()
-                f.write('detection:'+' ||'.join('%d'%c.item() for c in dtb)+
-                      ', ground truth: '+' ||'.join('%d'%c.item() for c in gtb)+', iou:%1.2f'%iou1)
+                with open(filename, mode='a') as f:
+                    f.write('rank %d: %s(%d), score %1.2f%%, precision:%1.2f, recall:%1.2f\n'%
+                      (k,name,ii[k]-1,conf,precision,recall))
+                    f.write('detection:'+' ||'.join('%d'%c.item() for c in dtb)+
+                      ', ground truth: '+' ||'.join('%d'%c.item() for c in gtb)+', iou:%1.2f\n'%iou1)
                 
             k+=1
         AP=1;
