@@ -116,7 +116,7 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
                 
             k+=1
         AP=1;
-        for i,p in precisions:
+        for i,p in enumerate(precisions):
             prec=np.max(np.array(precisions[i:]))
             AP+=prec*(np.floor(np.float(i+1)/possible/0.1)-np.floor(np.float(i)/possible/0.1))
         AP=AP/11*100
