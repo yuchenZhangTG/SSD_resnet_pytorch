@@ -109,7 +109,7 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
                 precision.append(correct/(k+1))
                 recall.append(correct/possible)
                 print('rank %d: %s(%d), score %1.2f%%, precision:%1.2f, recall:%1.2f'%
-                      [k,name,ii[k]-1,conf,precision,recall])
+                      (k,name,ii[k]-1,conf,precision,recall))
                 gtb=gt_box[k,:];dtb=dt_box[i,:]; iou1=iou[k,i]
                 print('detection:'+' ||'.join(str(c) for c in gtb)+
                       ', ground truth: '+' ||'.join(str(c) for c in dtb)+', iou:%1.2f'%iou1)
