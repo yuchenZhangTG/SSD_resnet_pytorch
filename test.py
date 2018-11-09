@@ -110,9 +110,9 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
                 precisions.append(precision)
                 print('rank %d: %s(%d), score %1.2f%%, precision:%1.2f, recall:%1.2f'%
                       (k,name,ii[k]-1,conf,precision,recall))
-                gtb=gt_box[k,:];dtb=dt_box[i,:]; iou1=iou[k,i].item()
-                print('detection:'+' ||'.join(str(c) for c in gtb)+
-                      ', ground truth: '+' ||'.join(str(c) for c in dtb)+', iou:%1.2f'%iou1)
+                gtb=gt_box[i,:];dtb=dt_box[k,:]; iou1=iou[k,i].item()
+                print('detection:'+' ||'.join('%d'%c.item() for c in dtb)+
+                      ', ground truth: '+' ||'.join('%d'%c.item() for c in gtb)+', iou:%1.2f'%iou1)
                 
             k+=1
         AP=1;
