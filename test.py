@@ -94,7 +94,7 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
         dt_box=detections[0,ii,jj,1:]*scale
         iou=jaccard(dt_box,gt_box)
         k=0; correct=0;  
-        precision=[]; recall=[];
+        precisions=[];
         while correct<possible and k<ntop:
             flag=False
             for i, gtl in enumerate(gt_label):
@@ -105,22 +105,22 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
                     break
             if flag:
                 name = labelmap[ii[k]-1]
-                conf = detections2[k].item()*100
-                precision.append(correct/(k+1))
-                recall.append(correct/possible)
+                conf = detectionr[k].item()*100
+                precision=correct/(k+1);recall=correct/possible
+                precisions.append(precision)
                 print('rank %d: %s(%d), score %1.2f%%, precision:%1.2f, recall:%1.2f'%
                       (k,name,ii[k]-1,conf,precision,recall))
-                gtb=gt_box[k,:];dtb=dt_box[i,:]; iou1=iou[k,i]
+                gtb=gt_box[k,:];dtb=dt_box[i,:]; iou1=iou[k,i].item()
                 print('detection:'+' ||'.join(str(c) for c in gtb)+
                       ', ground truth: '+' ||'.join(str(c) for c in dtb)+', iou:%1.2f'%iou1)
                 
             k+=1
         AP=1;
-        for i,p in precision:
-            prec=np.max(np.array(precision[i:]))
+        for i,p in precisions:
+            prec=np.max(np.array(precisions[i:]))
             AP+=prec*(np.floor(np.float(i+1)/possible/0.1)-np.floor(np.float(i)/possible/0.1))
-        AP=AP/11
-                
+        AP=AP/11*100
+        print('---AP=%1.2f%%----'%AP)
         
 
 
