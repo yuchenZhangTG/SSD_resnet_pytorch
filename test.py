@@ -105,7 +105,7 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
                     break
             if flag:
                 name = labelmap[ii[k]-1]
-                conf = detections2[k].iterm()*100
+                conf = detections2[k].item()*100
                 precision.append(correct/(k+1))
                 recall.append(correct/possible)
                 print('rank %d: %s(%d), score %1.2f%%, precision:%1.2f, recall:%1.2f'%
