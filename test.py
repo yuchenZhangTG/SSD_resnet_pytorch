@@ -108,7 +108,7 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
         with open(filename, mode='a') as f:
             f.write('---AP=%1.2f%%----'%AP)
         mAP=(mAP*i+AP)/(i+1)
-        print('Image {:d}/{:d} AP: {:d}, total AP: {:d}'.format(i+1, num_images,AP,mAP))
+        print('Image {:d}/{:d} AP: {:.0f}, total AP: {:.0f}'.format(i+1, num_images,AP,mAP))
         
 
 def test_voc():
