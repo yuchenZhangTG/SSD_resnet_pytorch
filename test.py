@@ -95,7 +95,7 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
         iou=jaccard(dt_box,gt_box)
         k=0; correct=0;  
         precision=[]; recall=[];
-        while recall<1 and k<ntop:
+        while correct<possible and k<ntop:
             flag=False
             for i, gtl in enumerate(gt_label):
                 if ii[k]==gtl and iou[k,i]>0.5:
