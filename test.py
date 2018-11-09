@@ -13,7 +13,12 @@ from data import VOCAnnotationTransform, VOCDetection, BaseTransform, VOC_CLASSE
 import torch.utils.data as data
 from ssd import build_ssd
 
+from layers.box_utils import jaccard
+import numpy as np
+
 parser = argparse.ArgumentParser(description='Single Shot MultiBox Detection')
+parser.add_argument('--model', default='vgg',
+                    help='model architecture of the base network')
 parser.add_argument('--trained_model', default='weights/ssd_300_VOC0712.pth',
                     type=str, help='Trained state_dict file path to open')
 parser.add_argument('--save_folder', default='eval/', type=str,
@@ -71,15 +76,50 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
                 coords = (pt[0], pt[1], pt[2], pt[3])
                 pred_num += 1
                 with open(filename, mode='a') as f:
-                    f.write(str(pred_num)+' label: '+label_name+' score: ' +
+                    f.write(str(pred_num)+' label: '+label_name+'('+str(i-1)+') score: ' +
                             str(score) + ' '+' || '.join(str(c) for c in coords) + '\n')
                 j += 1
+        
+        detections2=detections[0,:,:,0].view(-1)
+        detectionr, rind =detections2.sort(descending=True)
+        ntop=40
+        jj=rind[:ntop]%200
+        ii=rind[:ntop]/200
+        
+        gt_label=[box[-1]  for box in annotation]
+        possible=len(gt_label) 
+        if gt_label==0:
+            continue
+        gt_box=torch.tensor([box[:-1]  for box in annotation])
+        dt_box=detections[0,ii,jj,1:]
+        iou=jaccard(dt_box,gt_box)
+        k=0; correct=0;  
+        precision=[]; recall=[];
+        while recall<1 and k<ntop:
+            flag=False
+            for i, gtl in enumerate(gt_label):
+                if ii[k]==gtl and iou[k,i]>0.5:
+                    correct+=1
+                    flag=True
+                    gt_label[i]=0 #turn the ground truth off
+                    break
+            if flag:
+                precision.append(correct/(k+1))
+                recall.append(correct/possible)
+            k+=1
+        AP=1;
+        for i,p in precision:
+            prec=np.max(np.array(precision[i:]))
+            AP+=prec*(np.floor(np.float(i+1)/possible)-np.floor(np.float(i)/possible))
+        AP=AP/11
+                
+        
 
 
 def test_voc():
     # load net
     num_classes = len(VOC_CLASSES) + 1 # +1 background
-    net = build_ssd('test', 300, num_classes) # initialize SSD
+    net = build_ssd('test',args.model, 300, num_classes) # initialize SSD
     net.load_state_dict(torch.load(args.trained_model))
     net.eval()
     print('Finished loading model!')
