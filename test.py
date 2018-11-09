@@ -105,10 +105,10 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
             prec=np.max(np.array(precisions[j:]))
             AP+=prec*(np.floor(np.float(j+1)/possible/0.1)-np.floor(np.float(j)/possible/0.1))
         AP=AP/11*100
-        with open(filename, mode='a') as f:
-            f.write('---AP=%1.2f%%----'%AP)
         mAP=(mAP*i+AP)/(i+1)
-        print('Image {:d}/{:d} AP: {:.0f}, total AP: {:.0f}'.format(i+1, num_images,AP,mAP))
+        with open(filename, mode='a') as f:
+            f.write('---AP: %.1f%%, total AP: %.1f%%---'%(AP,mAP))
+        print('Image {:d}/{:d} AP: {:.1f}, total AP: {:.1f}'.format(i+1, num_images,AP,mAP))
         
 
 def test_voc():
