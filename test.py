@@ -44,17 +44,16 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
     # dump predictions and assoc. ground truth to text file for now
     filename = save_folder+'test1.txt'
     num_images = len(testset)
+    mAP=0;
     for i in range(num_images):
-        print('Testing image {:d}/{:d}....'.format(i+1, num_images))
         img = testset.pull_image(i)
         img_id, annotation = testset.pull_anno(i)
         x = torch.from_numpy(transform(img)[0]).permute(2, 0, 1)
         x = Variable(x.unsqueeze(0))
-
+        
         with open(filename, mode='a') as f:
             f.write('\nGROUND TRUTH FOR: '+img_id+'\n')
-            for box in annotation:
-                f.write('label: '+' || '.join(str(b) for b in box)+'\n')
+           
         if cuda:
             x = x.cuda()
 
@@ -64,21 +63,6 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
         scale = torch.Tensor([img.shape[1], img.shape[0],
                              img.shape[1], img.shape[0]])
         pred_num = 0
-        for i in range(detections.size(1)):
-            j = 0
-            while detections[0, i, j, 0] >= 0.6:
-                if pred_num == 0:
-                    with open(filename, mode='a') as f:
-                        f.write('PREDICTIONS: '+'\n')
-                score = detections[0, i, j, 0]
-                label_name = labelmap[i-1]
-                pt = (detections[0, i, j, 1:]*scale).cpu().numpy()
-                coords = (pt[0], pt[1], pt[2], pt[3])
-                pred_num += 1
-                with open(filename, mode='a') as f:
-                    f.write(str(pred_num)+' label: '+label_name+'('+str(i-1)+') score: ' +
-                            str(score) + ' '+' || '.join(str(c) for c in coords) + '\n')
-                j += 1
         
         detections2=detections[0,:,:,0].view(-1)
         detectionr, rind =detections2.sort(descending=True)
@@ -97,32 +81,33 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
         precisions=[];
         while correct<possible and k<ntop:
             flag=False
-            for i, gtl in enumerate(gt_label):
-                if ii[k]-1==gtl and iou[k,i]>0.5:
+            for j, gtl in enumerate(gt_label):
+                if ii[k]-1==gtl and iou[k,j]>0.5:
                     correct+=1
                     flag=True
-                    gt_label[i]=0 #turn the ground truth off
+                    gt_label[j]=0 #turn the ground truth off
                     break
             if flag:
                 name = labelmap[ii[k]-1]
                 conf = detectionr[k].item()*100
                 precision=correct/(k+1);recall=correct/possible
                 precisions.append(precision)
-                print('rank %d: %s(%d), score %1.2f%%, precision:%1.2f, recall:%1.2f'%
+                f.write('rank %d: %s(%d), score %1.2f%%, precision:%1.2f, recall:%1.2f'%
                       (k,name,ii[k]-1,conf,precision,recall))
-                gtb=gt_box[i,:];dtb=dt_box[k,:]; iou1=iou[k,i].item()
-                print('detection:'+' ||'.join('%d'%c.item() for c in dtb)+
+                gtb=gt_box[j,:];dtb=dt_box[k,:]; iou1=iou[k,j].item()
+                f.write('detection:'+' ||'.join('%d'%c.item() for c in dtb)+
                       ', ground truth: '+' ||'.join('%d'%c.item() for c in gtb)+', iou:%1.2f'%iou1)
                 
             k+=1
         AP=1;
-        for i,p in enumerate(precisions):
-            prec=np.max(np.array(precisions[i:]))
-            AP+=prec*(np.floor(np.float(i+1)/possible/0.1)-np.floor(np.float(i)/possible/0.1))
+        for j,p in enumerate(precisions):
+            prec=np.max(np.array(precisions[j:]))
+            AP+=prec*(np.floor(np.float(j+1)/possible/0.1)-np.floor(np.float(j)/possible/0.1))
         AP=AP/11*100
-        print('---AP=%1.2f%%----'%AP)
+        f.write('---AP=%1.2f%%----'%AP)
+        mAP=(mAP*i+AP)/(i+1)
+        print('Image {:d}/{:d} AP: {:d}, total AP: {:d}'.format(i+1, num_images,AP,mAP))
         
-
 
 def test_voc():
     # load net
