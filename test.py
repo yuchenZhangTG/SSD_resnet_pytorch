@@ -91,26 +91,34 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
         if gt_label==0:
             continue
         gt_box=torch.tensor([box[:-1]  for box in annotation])
-        dt_box=detections[0,ii,jj,1:]
+        dt_box=detections[0,ii,jj,1:]*scale
         iou=jaccard(dt_box,gt_box)
         k=0; correct=0;  
         precision=[]; recall=[];
         while correct<possible and k<ntop:
             flag=False
             for i, gtl in enumerate(gt_label):
-                if ii[k]==gtl and iou[k,i]>0.5:
+                if ii[k]-1==gtl and iou[k,i]>0.5:
                     correct+=1
                     flag=True
                     gt_label[i]=0 #turn the ground truth off
                     break
             if flag:
+                name = labelmap[ii[k]-1]
+                conf = detections2[k].iterm()*100
                 precision.append(correct/(k+1))
                 recall.append(correct/possible)
+                print('rank %d: %s(%d), score %1.2f%%, precision:%1.2f, recall:%1.2f'%
+                      [k,name,ii[k]-1,conf,precision,recall])
+                gtb=gt_box[k,:];dtb=dt_box[i,:]; iou1=iou[k,i]
+                print('detection:'+' ||'.join(str(c) for c in gtb)+
+                      ', ground truth: '+' ||'.join(str(c) for c in dtb)+', iou:%1.2f'%iou1)
+                
             k+=1
         AP=1;
         for i,p in precision:
             prec=np.max(np.array(precision[i:]))
-            AP+=prec*(np.floor(np.float(i+1)/possible)-np.floor(np.float(i)/possible))
+            AP+=prec*(np.floor(np.float(i+1)/possible/0.1)-np.floor(np.float(i)/possible/0.1))
         AP=AP/11
                 
         
