@@ -31,7 +31,7 @@ parser.add_argument('--model', default='vgg',
                     help='model architecture of the base network')
 parser.add_argument('--basenet', default='vgg16_reducedfc.pth',
                     help='Pretrained base model')
-parser.add_argument('--batch_size', default=16, type=int,
+parser.add_argument('--batch_size', default=24, type=int,
                     help='Batch size for training')
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from')
