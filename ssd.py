@@ -17,7 +17,7 @@ extras = {
 #where to extract features
 extract = {
     'vgg': {'b':[21,33],'e':[1,3,5,7]}, #vgg -14
-    'resnet': {'b':[10,16,29],'e':[0,1,2]}
+    'resnet': {'b':[10,16,19],'e':[0,1,2]}
 }
 
 
@@ -55,7 +55,7 @@ class SSD(nn.Module):
         # SSD network
         self.base = nn.ModuleList(base)
         # Layer learns to scale the l2 normalized features from conv4_3
-        self.L2Norm = L2Norm( (512,1024)[model=='resnet'], 20)
+        self.L2Norm = L2Norm( 512, 20)
         self.extras = nn.ModuleList(extras)
 
         self.loc = nn.ModuleList(head[0])
@@ -205,7 +205,7 @@ def resnet(cfg,in_channel=3):
     layers += make_layers(block,64*block.expansion,128,cfg[1], stride=2)
     layers += make_layers(block,128*block.expansion,256,cfg[2], stride=2)
     layers += make_layers(block,256*block.expansion,512,cfg[3], stride=2)
-    layers += [nn.AvgPool2d(7, stride=1)]
+    #layers += [nn.AvgPool2d(7, stride=1)]
     return layers
 
 
