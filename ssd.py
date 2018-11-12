@@ -11,13 +11,13 @@ import os
 #extra layers
 extras = {
     'vgg': [1024,256, 'S', 512, 128, 'S', 256, 128, 256, 128, 256],
-    'resnet': [512,256,128,128,128],
+    'resnet': [512,256,128,64],
 }
 
 #where to extract features
 extract = {
     'vgg': {'b':[21,33],'e':[1,3,5,7]}, #vgg -14
-    'resnet': {'b':[16,19],'e':[0,1,2,3]}
+    'resnet': {'b':[10,16,29],'e':[0,1,2]}
 }
 
 
@@ -232,7 +232,7 @@ def resnet_extras(cfg):
     in_channels=0
     for k, v in enumerate(cfg):
         if k>0:
-            layers += make_layers(block,in_channels,v,1,stride=(1,2)[k<3])    
+            layers += make_layers(block,in_channels,v,1,stride=2)    
         in_channels = v*block.expansion
     return layers
 
