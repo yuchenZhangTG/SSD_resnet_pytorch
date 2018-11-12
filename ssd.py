@@ -230,10 +230,13 @@ def resnet_extras(cfg):
     layers = []
     block= torchvision.models.resnet.Bottleneck
     in_channels=0
-    for k, v in enumerate(cfg):
-        if k>0:
-            layers += make_layers(block,in_channels,v,1,stride=2)    
-        in_channels = v*block.expansion
+    
+    in_channels = cfg[0]*block.expansion
+    layers += make_layers(block,in_channels,cfg[1],1,stride=2)
+    in_channels =cfg[1]*block.expansion
+    for k, v in enumerate(cfg[2:4]):
+        layers +=[nn.Conv2d(in_channels, v*block.expansion, kernel_size=3)]
+        in_channels=v*block.expansion            
     return layers
 
 
