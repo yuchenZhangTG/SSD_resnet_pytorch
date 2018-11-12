@@ -46,9 +46,9 @@ parser.add_argument('--lr', '--learning-rate', default=1e-3, type=float,
 parser.add_argument('--momentum', default=0.9, type=float,
                     help='Momentum value for optim')
 parser.add_argument('--weight_decay', default=5e-4, type=float,
-                    help='Weight decay for SGD')
+                    help='Weight decay')
 parser.add_argument('--gamma', default=0.1, type=float,
-                    help='Gamma update for SGD')
+                    help='Gamma update')
 parser.add_argument('--visdom', default=False, type=str2bool,
                     help='Use visdom for loss visualization')
 parser.add_argument('--save_folder', default='weights/',
@@ -119,8 +119,8 @@ def train():
         ssd_net.loc.apply(weights_init)
         ssd_net.conf.apply(weights_init)
 
-    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum,
-                          weight_decay=args.weight_decay)
+    #optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum,weight_decay=args.weight_decay)
+    optimizer = optim.Adam(net.parameters(),lr=args.lr,weight_decay=args.weight_decay)
     criterion = MultiBoxLoss(cfg['num_classes'], 0.5, True, 0, True, 3, 0.5,
                              False, args.cuda)
 
