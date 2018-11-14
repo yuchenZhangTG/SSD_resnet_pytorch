@@ -2,14 +2,14 @@
 # Ellis Brown
 
 start=`date +%s`
-
+root=$(pwd)
 # handle optional download dir
 if [ -z "$1" ]
   then
-    # navigate to ~/data
-    echo "navigating to ~/data/ ..." 
-    mkdir -p ~/data
-    cd ~/data/
+    # navigate to $root/data
+    echo "navigating to $root/data/ ..." 
+    mkdir -p $root/data
+    cd $root/data/
   else
     # check if is valid directory
     if [ ! -d $1 ]; then
