@@ -1,4 +1,12 @@
 # SSD: Single Shot MultiBox Object Detector, in PyTorch
+### Table of Contents
+- <a href='#Introduction'>Introduction</a>
+- <a href='#Installation'>Installation</a>
+- <a href='#Datasets'>Datasets</a>
+- <a href='#Train'>Train</a>
+- <a href='#Test'>Test</a>
+&nbsp;
+&nbsp;
 ## Introduction
 This is the SSD model based on the unfinished project by [Max DeGroot](https://github.com/amdegroot/ssd.pytorch/). I have corrected some bugs in the code and successfully run the code on GPU (Tesla P4) at Google Cloud.  
 
@@ -9,7 +17,7 @@ This is the SSD model based on the unfinished project by [Max DeGroot](https://g
 - Clone this repository.
   * Note: We currently only support Python 3+.
 - Then download the dataset by following the [instructions](#datasets) below.
-- We now support [Visdom](https://github.com/facebookresearch/visdom) for real-time loss visualization during training!
+- We support [Visdom](https://github.com/facebookresearch/visdom) for real-time loss visualization during training!
   * To use Visdom in the browser:
   ```Shell
   # First install Python server and client
@@ -18,13 +26,27 @@ This is the SSD model based on the unfinished project by [Max DeGroot](https://g
   python -m visdom.server
   ```
   * Then (during training) navigate to http://localhost:8097/ (see the Train section below for training details).
-- Note: For training, we currently support [VOC](http://host.robots.ox.ac.uk/pascal/VOC/) and [COCO](http://mscoco.org/), and aim to add [ImageNet](http://www.image-net.org/) support soon.
+- Note: For training, we currently support [VOC](http://host.robots.ox.ac.uk/pascal/VOC/), and aim to add and [COCO](http://mscoco.org/) [ImageNet](http://www.image-net.org/) support in the future.
 
 ## Datasets
 To make things easy, we provide bash scripts to handle the dataset downloads and setup for you.  We also provide simple dataset loaders that inherit `torch.utils.data.Dataset`, making them fully compatible with the `torchvision.datasets` [API](http://pytorch.org/docs/torchvision/datasets.html).
+### VOC Dataset
+PASCAL VOC: Visual Object Classes
+##### Download VOC2007 trainval & test
+```Shell
+git clone https://github.com/yczhang1017/SSD_resnet_pytorch.git
+# navigate to the home directory of SSD model, dataset will be downloaded into data folder
+cd SSD_resnet_pytorch
+# specify a directory for dataset to be downloaded into, else default is ~/data/
+sh data/scripts/VOC2007.sh # <directory>
+```
+##### Download VOC2012 trainval
+```Shell
+# specify a directory for dataset to be downloaded into, else default is ~/data/
+sh data/scripts/VOC2012.sh # <directory>
+```
 
-
-### COCO
+### COCO(not fully implemented yet)
 Microsoft COCO: Common Objects in Context
 
 ##### Download COCO 2014
@@ -32,59 +54,63 @@ Microsoft COCO: Common Objects in Context
 # specify a directory for dataset to be downloaded into, else default is ~/data/
 sh data/scripts/COCO2014.sh
 ```
-
-### VOC Dataset
-PASCAL VOC: Visual Object Classes
-
-##### Download VOC2007 trainval & test
-```Shell
-# specify a directory for dataset to be downloaded into, else default is ~/data/
-sh data/scripts/VOC2007.sh # <directory>
-```
-
-##### Download VOC2012 trainval
-```Shell
-# specify a directory for dataset to be downloaded into, else default is ~/data/
-sh data/scripts/VOC2012.sh # <directory>
-```
-
 ## Training SSD
 - First download the fc-reduced [VGG-16](https://arxiv.org/abs/1409.1556) PyTorch base network weights at:              https://s3.amazonaws.com/amdegroot-models/vgg16_reducedfc.pth
 - By default, we assume you have downloaded the file in the `ssd.pytorch/weights` dir:
 
 ```Shell
-mkdir weights
 cd weights
 wget https://s3.amazonaws.com/amdegroot-models/vgg16_reducedfc.pth
+#adjust the keys in the weights file to fit for current model
+python3 vggweights.py
+cd ..
 ```
 
 - To train SSD using the train script simply specify the parameters listed in `train.py` as a flag or manually change them.
 
 ```Shell
-python train.py
+#use vgg 
+python3 train.py 
+#If use resNet 
+python3 train.py --model 'resnet' --basenet 'resnet50.pth' 
+#if you don't want the training to stop after you log out
+nohup python3 -u train.py --model 'resnet' --basenet 'resnet50.pth' > r1.log </dev/null 2>&1
 ```
-
 - Note:
-  * For training, an NVIDIA GPU is strongly recommended for speed.
+  * For training, an NVIDIA GPU is strongly recommended for speed. It takes about two days to iterate over 120000x24 images for using Tesla K80 GPU. resNet50 takes a little bit longer than VGG16. I guess the time would be within one day, if you use Tesla P4 or P100.
   * For instructions on Visdom usage/installation, see the <a href='#installation'>Installation</a> section.
   * You can pick-up training from a checkpoint by specifying the path as one of the training parameters (again, see `train.py` for options)
 
-## Evaluation
-To evaluate a trained network:
-
-```Shell
-python eval.py
+## Test
+### Use a pre-trained SSD network for detection
+#### Download a pre-trained network
+- We are trying to provide PyTorch `state_dicts` (dict of weight tensors) of the latest SSD model definitions trained on different datasets.  
+- Currently, we provide the following PyTorch models:
+    * SSD300 trained on VOC0712 (newest PyTorch weights)
+      - https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth
+    * SSD300 trained on VOC0712 (original Caffe weights)
+      - https://s3.amazonaws.com/amdegroot-models/ssd_300_VOC0712.pth
+```Shell      
+cd weights
+wget https://s3.amazonaws.com/amdegroot-models/ssd300_mAP_77.43_v2.pth
+#adjust the keys in the weights file to fit for current model
+python3 ssdweights.py      
 ```
+#### Test and evaluate mean AP (average precision)
+- To test a trained network:
+```Shell
+#use vgg 
+python3 test.py
+#If use resNet
+python3 test.py --model 'resnet' --trained_model 'weights/ssd300_resnet.pth'
+```
+Currently, we got mAP 86% for VGG16 and %67 for resNet50.
 
-You can specify the parameters listed in the `eval.py` file by flagging them or manually changing them.  
-
-
-<img align="left" src= "https://github.com/amdegroot/ssd.pytorch/blob/master/doc/detection_examples.png">
-
-## TODO
-I have accumulated the following to-do list, which I hope to complete in the near future
-- Still to come:
-  * [ ] Support for resNet and mobileNet as feature extractor
-  * [ ] Support for SSD512 training and testing
-  * [ ] Testing results for VOC dataset with loss, accuracy and training time.
-  * [ ] Implement [visual reasoning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Chen_Iterative_Visual_Reasoning_CVPR_2018_paper.pdf) for improving accuracy 
+#### Display images
+```Shell
+#use vgg 
+python3 demo.py
+```
+- The output images are shown in demo folder
+<img align="right" src= "https://github.com/yczhang1017/SSD_resnet_pytorch/blob/master/demo/output72.png" height = 400/>
+<img align="right" src= "https://github.com/yczhang1017/SSD_resnet_pytorch/blob/master/demo/output1229.png" height = 400/>
