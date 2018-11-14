@@ -1,10 +1,10 @@
 # SSD: Single Shot MultiBox Object Detector, in PyTorch
 ### Table of Contents
-- <a href='#Introduction'>Introduction</a>
-- <a href='#Installation'>Installation</a>
-- <a href='#Datasets'>Datasets</a>
-- <a href='#Train'>Train</a>
-- <a href='#Test'>Test</a>
+- <a href='#introduction'>Introduction</a>
+- <a href='#installation'>Installation</a>
+- <a href='#datasets'>Datasets</a>
+- <a href='#train'>Train</a>
+- <a href='#test'>Test</a>
 &nbsp;
 &nbsp;
 ## Introduction
