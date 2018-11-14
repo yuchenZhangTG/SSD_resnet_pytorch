@@ -8,7 +8,7 @@
 &nbsp;
 &nbsp;
 ## Introduction
-This is the SSD model based on the unfinished project by [Max DeGroot](https://github.com/amdegroot/ssd.pytorch/). I have corrected some bugs in the code and successfully run the code on GPU (Tesla P4) at Google Cloud.  
+This is the SSD model based on project by [Max DeGroot](https://github.com/amdegroot/ssd.pytorch/). I corrected some bugs in the code and successfully run the code on GPUs at Google Cloud.  
 
 [SSD (Single Shot MultiBox Object Detector)](https://arxiv.org/pdf/1512.02325.pdf) is able to detect objects in an image with bounding boxes. The method is faster than [faster-RCNN](http://papers.nips.cc/paper/5638-faster-r-cnn-towards-real-time-object-detection-with-region-proposal-networks.pdf) and [mask-RCNN](https://arxiv.org/pdf/1703.06870.pdf%20http://arxiv.org/abs/1703.06870.pdf) and still yield a good accuracy.
 
