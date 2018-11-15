@@ -112,9 +112,9 @@ Currently, we got mAP 86% for VGG16 and %67 for resNet50.
 python3 demo.py
 ```
 - The output images are shown in demo folder
-[demo/output72.png]
-[demo/output1229.png]
-[doc/ssd.png]
+<img align="left" src= "https://github.com/yczhang1017/SSD_resnet_pytorch/tree/master/demo/output72.png">
+<img align="left" src= "https://github.com/yczhang1017/SSD_resnet_pytorch/tree/master/demo/output1229.png">
+<img align="left" src= "https://github.com/yczhang1017/SSD_resnet_pytorch/tree/master/doc/ssd.png">
 
 
 
