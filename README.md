@@ -112,8 +112,13 @@ Currently, we got mAP 86% for VGG16 and %67 for resNet50.
 python3 demo.py
 ```
 - The output images are shown in demo folder
-<img align="right" src= "https://github.com/yczhang1017/SSD_resnet_pytorch/blob/master/demo/output72.png" height = 400/>
-<img align="right" src= "https://github.com/yczhang1017/SSD_resnet_pytorch/blob/master/demo/output1229.png" height = 400/>
+[demo/output72.png]
+[demo/output1229.png]
+[doc/ssd.png]
+
+
+
+
 ## References
 - Wei Liu, et al. "SSD: Single Shot MultiBox Detector." [ECCV2016]((http://arxiv.org/abs/1512.02325)).
 - SSD model in PyTorch by [Max DeGroot](https://github.com/amdegroot/ssd.pytorch/)
