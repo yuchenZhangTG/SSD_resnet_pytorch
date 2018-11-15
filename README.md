@@ -112,9 +112,8 @@ Currently, we got mAP 86% for VGG16 and %67 for resNet50.
 python3 demo.py
 ```
 The output images are shown in demo folder
-![test image 1](demo/output72.png)
-![test image 1](demo/output1229.png)
-![test image 1](doc/SSD.jpg)
+![test example 1](demo/output72.png)
+![test example 2](demo/output1229.png)
 
 
 
